@@ -55,7 +55,7 @@ lathermailApp.controller('lathermailCtrl', function ($scope, $http, $routeParams
   $scope.messages = null;
   $scope.selectedMessage = null;
   $scope.offset = 0;
-  $scope.offsetStep = 2;
+  $scope.offsetStep = 10;
 
   $scope.refreshMessages = function (isInboxChanged) {
     if (isInboxChanged) {$scope.offset = 0}
