@@ -212,6 +212,39 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(msg["recipients_raw"], to)
         self.assertEqual(msg["sender_raw"], sender)
 
+    def test_offset_and_limit(self):
+        many = 31
+        limit = offset = 10
+        user = "Chegevara"
+        password = "ussr"
+
+        headers = auth(user, password)
+        headers["X-Mail-Offset"] = offset
+        headers["X-Mail-limit"] = limit
+
+        for i in range(many):
+          smtp_send_email(
+            "test@example.com", "Offset test", "Test <asdf@exmapl.com>", "tbody",
+            user=user, password=password, port=self.port, html_body=None
+        )
+
+        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], limit)
+        headers["X-Mail-Offset"] = 30
+        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], 1)
+        headers["X-Mail-Offset"] = 32
+        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], 0)
+
+        headers.pop("X-Mail-Offset")
+        headers.pop("X-Mail-limit")
+        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], many)
+
+        headers["X-Mail-Offset"] = offset
+        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], many - offset)
+
+        headers.pop("X-Mail-Offset")
+        headers["X-Mail-limit"] = limit
+        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], limit)
+
 
 def auth(user, password):
     return {"X-Mail-Inbox": user, "X-Mail-Password": password}
