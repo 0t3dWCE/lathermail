@@ -54,11 +54,16 @@ lathermailApp.controller('lathermailCtrl', function ($scope, $http, $routeParams
   $scope.messageById  = {};
   $scope.messages = null;
   $scope.selectedMessage = null;
+  $scope.offset = 0;
+  $scope.offsetStep = 2;
 
-  $scope.refreshMessages = function () {
+  $scope.refreshMessages = function (isInboxChanged) {
+    if (isInboxChanged) {$scope.offset = 0}
     $http.defaults.headers.common = {
       "X-Mail-Inbox": $scope.$storage.inbox,
-      "X-Mail-Password": $scope.$storage.password
+      "X-Mail-Password": $scope.$storage.password,
+      "X-Mail-Offset": $scope.offset,
+      "X-Mail-Limit": $scope.offsetStep
     };
 
     return $http.get("/api/0/inboxes/").then(function(resp) {
@@ -88,6 +93,17 @@ lathermailApp.controller('lathermailCtrl', function ($scope, $http, $routeParams
         }
       });
     });
+  };
+
+  $scope.getNextMessagesPage = function(direction) {
+    if (direction === 'right') {
+      $scope.messages.length < $scope.offsetStep ? $scope.offset += 0 : $scope.offset += $scope.offsetStep;
+    }
+    else {
+      $scope.offset !== 0 ? $scope.offset -= $scope.offsetStep : $scope.offset = 0 ;
+    }
+    $scope.refreshMessages();
+    $scope.selectMessage($scope.messages[0]);
   };
 
   $scope.selectMessage = function (message) {

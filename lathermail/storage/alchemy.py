@@ -88,8 +88,8 @@ def get_inboxes(password):
     return [row.inbox for row in rows]
 
 
-def find_messages(password, inbox=None, fields=None, limit=0, include_attachment_bodies=False):
-    messages = list(_iter_messages(password, inbox, fields, limit, include_attachment_bodies))
+def find_messages(password, inbox=None, fields=None, offset=0, limit=0, include_attachment_bodies=False):
+    messages = list(_iter_messages(password, inbox, fields, offset, limit, include_attachment_bodies))
     if messages:
         ids = (m["_id"] for m in messages)
         Message.query.filter(Message._id.in_(ids)).update({Message.read: True}, synchronize_session=False)
@@ -107,8 +107,8 @@ def remove_messages(password, inbox=None, fields=None):
     return count
 
 
-def _iter_messages(password, inbox=None, fields=None, limit=0, include_attachment_bodies=False):
-    query = _prepare_sql_query(password, inbox, fields, limit=limit)
+def _iter_messages(password, inbox=None, fields=None, offset=0, limit=0, include_attachment_bodies=False):
+    query = _prepare_sql_query(password, inbox, fields, offset=offset, limit=limit)
     for message in query.all():
         message = _convert_sa_message_to_dict(message)
         yield expand_message_fields(message, include_attachment_bodies)
@@ -122,7 +122,7 @@ def _convert_sa_message_to_dict(message):
     return result
 
 
-def _prepare_sql_query(password, inbox=None, fields=None, limit=0, order=True, to_select=Message, load_recipients=True):
+def _prepare_sql_query(password, inbox=None, fields=None, offset=0, limit=0, order=True, to_select=Message, load_recipients=True):
     filters = []
     if password is not None:
         filters.append(Message.password == password)
@@ -157,6 +157,8 @@ def _prepare_sql_query(password, inbox=None, fields=None, limit=0, order=True, t
         query = query.options(db.contains_eager(Message.recipients))
     if order:
         query = query.order_by(Message.created_at.desc())
+    if offset:
+        query = query.offset(offset)
     if limit:
         query = query.limit(limit)
     return query

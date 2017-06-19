@@ -18,7 +18,7 @@ api.representations.update({"application/json": output_json})
 class MessageList(Resource):
     def get(self):
         args = parser.parse_args()
-        messages = list(db.engine.find_messages(args.password, args.inbox, args))
+        messages = list(db.engine.find_messages(args.password, args.inbox, args, offset=args.offset, limit=args.limit))
         return {'message_list': messages, 'message_count': len(messages)}
 
     def delete(self):
