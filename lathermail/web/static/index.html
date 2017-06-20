@@ -59,12 +59,12 @@
     <div class="col-md-3">
       <input type="text" ng-model="query" placeholder="Filter messages..." class="form-control">
       <div style="float: right" >
-          <a ng-click="getNextMessagesPage('right')">next page</a>
+          <a ng-click="getNextMessagesPage('right')" class="pointer">next page</a>
           <i class="fa fa-caret-right"></i>
       </div>
       <div>
           <i class="fa fa-caret-left"></i>
-          <a ng-click="getNextMessagesPage('left')">previous page</a>
+          <a ng-click="getNextMessagesPage('left')" class="pointer">previous page</a>
       </div>
       <div class="with-vscroll top5" full-height>
         <table class="table table-bordered table-hover table-condensed">

@@ -34,8 +34,8 @@ def message_handler(*args, **kwargs):
         mongo.db.messages.insert(msg)
 
 
-def find_messages(password, inbox=None, fields=None, limit=0, include_attachment_bodies=False):
-    messages = list(_iter_messages(password, inbox, fields, limit, include_attachment_bodies))
+def find_messages(password, inbox=None, fields=None, offset=0, limit=0, include_attachment_bodies=False):
+    messages = list(_iter_messages(password, inbox, fields, offset, limit, include_attachment_bodies))
     if messages:
         ids = [m["_id"] for m in messages]
         mongo.db.messages.update({"_id": {"$in": ids}, "read": False},
@@ -43,9 +43,10 @@ def find_messages(password, inbox=None, fields=None, limit=0, include_attachment
     return messages
 
 
-def _iter_messages(password, inbox=None, fields=None, limit=0, include_attachment_bodies=False):
+def _iter_messages(password, inbox=None, fields=None, offset=0, limit=0, include_attachment_bodies=False):
     query = _prepare_query(password, inbox, fields)
-    for message in mongo.db.messages.find(query).sort("created_at", DESCENDING).limit(limit):
+
+    for message in mongo.db.messages.find(query).skip(offset).sort("created_at", DESCENDING).limit(limit):
         yield expand_message_fields(message, include_attachment_bodies)
 
 
