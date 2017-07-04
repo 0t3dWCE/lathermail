@@ -58,12 +58,14 @@ lathermailApp.controller('lathermailCtrl', function ($scope, $http, $routeParams
   $scope.offsetStep = 10;
 
   $scope.refreshMessages = function (isInboxChanged) {
-    if (isInboxChanged) {$scope.offset = 0}
+    if (isInboxChanged) {
+      $scope.offset = 0;
+      $scope.$storage.forwardCursor = "pointer";
+      $scope.$storage.backwardCursor = "notallowed";
+    }
     $http.defaults.headers.common = {
       "X-Mail-Inbox": $scope.$storage.inbox,
-      "X-Mail-Password": $scope.$storage.password,
-      "X-Mail-Offset": $scope.offset,
-      "X-Mail-Limit": $scope.offsetStep
+      "X-Mail-Password": $scope.$storage.password
     };
 
     return $http.get("/api/0/inboxes/").then(function(resp) {
@@ -73,7 +75,7 @@ lathermailApp.controller('lathermailCtrl', function ($scope, $http, $routeParams
       }
       $http.defaults.headers.common["X-Mail-Inbox"] = $scope.$storage.inbox;
     }).then(function () {
-      return $http.get("/api/0/messages/").then(function (resp) {
+      return $http.get("/api/0/messages/", {params: {offset:$scope.offset, limit: $scope.offsetStep}}).then(function (resp) {
         $scope.messages = resp.data.message_list;
         $scope.messageById  = {};
 
@@ -96,14 +98,24 @@ lathermailApp.controller('lathermailCtrl', function ($scope, $http, $routeParams
   };
 
   $scope.getNextMessagesPage = function(direction) {
-    if (direction === 'right') {
-      $scope.messages.length < $scope.offsetStep ? $scope.offset += 0 : $scope.offset += $scope.offsetStep;
-    }
-    else {
-      $scope.offset !== 0 ? $scope.offset -= $scope.offsetStep : $scope.offset = 0 ;
-    }
-    $scope.refreshMessages();
-    $scope.selectMessage($scope.messages[0]);
+    $scope.$storage.forwardCursor = $scope.$storage.backwardCursor = "pointer";
+    if (direction === 'forward') {
+      if ($scope.messages.length >= $scope.offsetStep) {
+        $scope.offset += $scope.offsetStep;
+        $scope.refreshMessages();
+      } else {
+        $scope.$storage.forwardCursor = "notallowed";
+        $scope.$storage.backwardCursor = "pointer";
+      }
+    } else {
+        if ( $scope.offset !== 0 ) {
+          $scope.offset -= $scope.offsetStep;
+          $scope.refreshMessages();
+        } else {
+          $scope.$storage.backwardCursor = "notallowed";
+          $scope.$storage.forwardCursor = "pointer";
+        }
+      }
   };
 
   $scope.selectMessage = function (message) {

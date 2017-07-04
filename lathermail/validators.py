@@ -20,5 +20,5 @@ for field in TEXT_FIELDS:
 parser.add_argument("created_at_lt", type=iso_date)
 parser.add_argument("created_at_gt", type=iso_date)
 parser.add_argument("read", type=types.boolean)
-parser.add_argument("X-Mail-Offset", type=int, dest="offset", location="headers", default=0)
-parser.add_argument("X-Mail-Limit", type=int, dest="limit", location="headers", default=0)
+parser.add_argument("offset", type=int, default=0)
+parser.add_argument("limit", type=int, default=0)

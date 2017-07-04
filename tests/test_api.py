@@ -223,27 +223,17 @@ class ApiTestCase(BaseTestCase):
         headers["X-Mail-limit"] = limit
 
         for i in range(many):
-          smtp_send_email(
-            "test@example.com", "Offset test", "Test <asdf@exmapl.com>", "tbody",
-            user=user, password=password, port=self.port, html_body=None
+            smtp_send_email(
+                "test@example.com", "Offset test", "Test <asdf@exmapl.com>", "tbody",
+                user=user, password=password, port=self.port, html_body=None
         )
 
-        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], limit)
-        headers["X-Mail-Offset"] = 30
-        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], 1)
-        headers["X-Mail-Offset"] = 32
-        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], 0)
-
-        headers.pop("X-Mail-Offset")
-        headers.pop("X-Mail-limit")
+        self.assertEquals(self.get("/messages/", {"offset": offset, "limit": limit}, headers=headers).json["message_count"], limit)
+        self.assertEquals(self.get("/messages/", {"offset": 30, "limit": limit}, headers=headers).json["message_count"], 1)
+        self.assertEquals(self.get("/messages/", {"offset": 32, "limit": limit}, headers=headers).json["message_count"], 0)
         self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], many)
-
-        headers["X-Mail-Offset"] = offset
-        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], many - offset)
-
-        headers.pop("X-Mail-Offset")
-        headers["X-Mail-limit"] = limit
-        self.assertEquals(self.get("/messages/", headers=headers).json["message_count"], limit)
+        self.assertEquals(self.get("/messages/", {"offset": offset}, headers=headers).json["message_count"], many - offset)
+        self.assertEquals(self.get("/messages/", {"limit": limit}, headers=headers).json["message_count"], limit)
 
 
 def auth(user, password):
